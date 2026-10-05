@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Text Summarizer</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            background-color: #fff7ed;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #fb923c;
+        }
+
+        h3 {
+            text-align: center;
+            margin-top: -20px;
+            margin-bottom: 40px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        textarea {
+            height: 150px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #fb923c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #f97316;
+        }
+
+        .summary-output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ffedd5;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #summary-heading {
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+
+        /* ADDED: agent image in the top-right corner of the card */
+        .container {
+            position: relative;
+        }
+
+        .agent-image {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 50px;
+            height: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- ADDED: agent image -->
+        <img class="agent-image" alt="AI agent"
+            src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cline x1='50' y1='14' x2='50' y2='26' stroke='%23f97316' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='12' r='5' fill='%23f97316'/%3E%3Crect x='24' y='26' width='52' height='44' rx='12' fill='%23fb923c'/%3E%3Crect x='30' y='34' width='40' height='28' rx='8' fill='%23fff7ed'/%3E%3Ccircle cx='41' cy='47' r='5' fill='%23333'/%3E%3Ccircle cx='59' cy='47' r='5' fill='%23333'/%3E%3Cpath d='M42 56 Q50 61 58 56' stroke='%23333' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Crect x='17' y='40' width='7' height='16' rx='3' fill='%23f97316'/%3E%3Crect x='76' y='40' width='7' height='16' rx='3' fill='%23f97316'/%3E%3Crect x='36' y='72' width='28' height='12' rx='5' fill='%23fb923c'/%3E%3C/svg%3E">
+
+        <h1>Text Summarizer</h1>
+
+        <h3>Using HuggingFace Transformer</h3>
+
+        <p>
+            Write or Paste your content below for quick summarization.
+        </p>
+
+        <form id="summarization-form">
+
+            <textarea
+                id="dialogue-input"
+                placeholder="Enter your content here..."
+                required></textarea>
+
+            <button type="submit">Summarize</button>
+
+        </form>
+
+        <div class="summary-output">
+
+            <h3 id="summary-heading">Content Summary</h3>
+
+            <p id="summary-text"></p>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        document.getElementById("summarization-form").addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            // Get references to elements
+            const dialogueInput = document.getElementById("dialogue-input");
+            const summaryText = document.getElementById("summary-text");
+            const submitButton = e.target.querySelector("button");
+
+            const dialogue = dialogueInput.value.trim();
+
+            if (!dialogue) {
+                return;
+            }
+
+            // Show processing message and disable button
+            summaryText.innerText = "Processing...";
+            submitButton.disabled = true;
+
+            try {
+
+                // Send dialogue to backend
+                const response = await fetch("/summarize/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        dialogue: dialogue
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                summaryText.innerText =
+                    data.summary || "No summary returned.";
+
+            } catch (err) {
+
+                // Show any error messages
+                summaryText.innerText = `Error: ${err.message}`;
+
+            } finally {
+
+                // Re-enable the button
+                submitButton.disabled = false;
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
